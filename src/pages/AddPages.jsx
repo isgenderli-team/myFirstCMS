@@ -1,4 +1,4 @@
-import React from "react";
+import React, {createRef} from "react";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-html";
 import "ace-builds/src-noconflict/mode-css";
@@ -10,10 +10,28 @@ import "ace-builds/src-noconflict/ext-emmet";
 export class AddPage extends React.Component{
   constructor() {
     super();
+    this.htmlEditor = createRef();
+    this.handleSave = this.handleSave.bind(this);
+    // this.cssEditor = createRef();
+    // this.jsEditor = createRef();
   }
   handleSave(){
-  console.log("URRA");
+    let formData = new FormData();
+    formData.append('html',this.htmlEditor.current.editor.getValue());
+    fetch("http://isgenderli.com/addPage",{
+      method:'POST',
+      body: formData
+    })
+      .then(response=>response.json())
+      .then(result=>console.log(result))
+
+
+
   }
+  componentDidMount() {
+    console.log(this.htmlEditor.current.editor.getValue())
+  }
+
   render(){
     return <div>
       <nav>
@@ -24,7 +42,7 @@ export class AddPage extends React.Component{
              aria-controls="nav-css" aria-selected="false">CSS</a>
           <a className="nav-link" id="nav-js-tab" data-toggle="tab" href="#nav-js" role="tab"
              aria-controls="nav-js" aria-selected="false">JS</a>
-          <button onClick={this.handleSave} className="btn btn-light ml-auto">[Save]</button>
+         <button onClick={this.handleSave} className="btn btn-light ml-auto">[Save]</button>
         </div>
       </nav>
       <div className="tab-content" id="nav-tabContent">
@@ -32,6 +50,7 @@ export class AddPage extends React.Component{
           <AceEditor
             mode="html"
             theme="vibrant_ink"
+            ref = {this.htmlEditor}
             width="100%"
             setOptions={
               {
