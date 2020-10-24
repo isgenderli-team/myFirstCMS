@@ -1,57 +1,69 @@
 import React, {createRef} from "react";
 import AceEditor from "react-ace";
-import "ace-builds/src-noconflict/mode-html";
-import "ace-builds/src-noconflict/mode-css";
-import "ace-builds/src-noconflict/mode-javascript";
-import "ace-builds/src-noconflict/theme-vibrant_ink";
-import "emmet-core";
-import "ace-builds/src-noconflict/ext-emmet";
 
-export class AddPage extends React.Component{
-  constructor() {
-    super();
-    this.htmlEditor = createRef();
-    this.cssEditor = createRef();
+export class EditPage extends React.Component{
+   constructor() {
+     super();
+     this.htmlEditor = createRef();
+     this.cssEditor = createRef();
      this.jsEditor = createRef();
     this.handleSave = this.handleSave.bind(this);
-    this.handleInputChange = this.handleInputChange.bind(this);
-    this.state={
-      pageName:"",
-      pageTitle:""
-    }
+   this.handleInputChange = this.handleInputChange.bind(this);
+ this.state={
+   editorContains:[],
+ }
+   }
+  componentDidMount() {
+  //fetch()
+    let formData = new FormData();
+    formData.append("id",window.location.pathname.split("/")[3]);
+   fetch("http://isgenderli.com/EditPage",{
+    method:"POST",
+     body:formData
+   })
+     .then(response=>response.json())
+     .then(result=>{
+       console.log(result);
+        this.setState({
+          editorContains: result
+        })
+       // WHY?
+       this.htmlEditor.current.editor.setValue(this.state.editorContains.html);
+       this.cssEditor.current.editor.setValue(this.state.editorContains.css);
+       this.jsEditor.current.editor.setValue(this.state.editorContains.js);
+     });
+
+
 
   }
+
   handleSave(){
+   // Отправились изменнёные значения в бд
     let formData = new FormData();
-    formData.append('name',this.state.pageName);
-    formData.append('title',this.state.pageTitle);
+    formData.append("id",this.state.editorContains.id);
+    formData.append("name",this.state.editorContains.name);
+    formData.append("title",this.state.editorContains.title);
     formData.append("html",this.htmlEditor.current.editor.getValue());
     formData.append("css",this.cssEditor.current.editor.getValue());
     formData.append("js",this.jsEditor.current.editor.getValue());
-    fetch("http://isgenderli.com/addPage",{
-      method:'POST',
-      body: formData
+
+    fetch("http://isgenderli.com/updatePage",{
+      method:"POST",
+      body:formData
     })
       .then(response=>response.json())
-      .then(result=>console.log(result))
-
+      .then(info=>console.log(info))
+   }
+   handleInputChange(event){
+  let target = event.target;
+  let name = target.name;
+  let value = target.value;
+  this.setState({
+      [name]: value
+  })
 
 
   }
-  handleInputChange(event){
-    const target = event.target; // <-input
-    const name = target.name; // <- input[name="name/title"]
-    const value = target.value; // <- input[name="name/title"].value
-
-    this.setState({
-      [name]:value
-    })
-
-  }
-  componentDidMount() {
-    console.log(this.htmlEditor.current.editor.getValue())
-  }
-
   render(){
     return <div>
       <nav>
@@ -64,7 +76,7 @@ export class AddPage extends React.Component{
              aria-controls="nav-js" aria-selected="false">JS</a>
           <a className="nav-link" id="nav-extraHtml-tab" data-toggle="tab" href="#nav-extraHtml" role="tab"
              aria-controls="nav-extraHtml" aria-selected="false">Html options</a>
-         <button onClick={this.handleSave} className="btn btn-light ml-auto">[Save]</button>
+          <button onClick={this.handleSave} className="btn btn-light ml-auto">[Save]</button>
         </div>
       </nav>
       <div className="tab-content" id="nav-tabContent">
@@ -116,15 +128,16 @@ export class AddPage extends React.Component{
         </div>
         <div className="tab-pane fade" id="nav-extraHtml" role="tabpanel" aria-labelledby="nav-extraHtml-tab">
           <div className="mt-5 mb-3 col-10">
-            <input onChange={this.handleInputChange} type="text" name="pageName" placeholder="Enter the name" className="form-control"/>
+            <input value={this.state.editorContains.name} onChange={this.handleInputChange} type="text" name="name" placeholder="Enter the name" className="form-control"/>
           </div>
           <div className="mb-3 col-10">
-            <input onChange={this.handleInputChange} type="text" name="pageTitle" placeholder="Enter the title" className="form-control"/>
+            <input value={this.state.editorContains.title} onChange={this.handleInputChange} type="text" name="title" placeholder="Enter the title" className="form-control"/>
           </div>
         </div>
-        </div>
+      </div>
 
 
     </div>
   }
 }
+// value={this.state.editorContains.name}value={this.state.editorContains.title}
